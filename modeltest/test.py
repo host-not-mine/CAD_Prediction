@@ -73,7 +73,7 @@ def calculate_specificity_sensitivity(pred:torch.Tensor, target:torch.Tensor):
     specificity_score = sum(specificity_score)/len(specificity_score)
     return sensitivity_scores, specificity_score
 
-def calculate_metrics(preds:torch.Tensor, masks:torch.Tensor):
+def calculate_metrics(preds:torch.Tensor, masks:torch.Tensor) -> dict[str, float]:
     metrics_dict = {}
     metrics_dict["IoU"] = calculate_iou(preds, masks)
     metrics_dict["Dice_Score"] = calculate_dice_score(preds, masks)
@@ -118,8 +118,8 @@ def stack_masks(preds:torch.Tensor, shape:Union[torch.Size, tuple]=(BATCH, 1, 51
 
     return cated
 
-def evaluate_model(version:str, demo_image_dir:str, sigmoid=False, max_masks=1):
-    model = load_model(version, max_masks=max_masks)
+def evaluate_model(model_path:str, demo_image_dir:str, sigmoid=False, max_masks=1):
+    model = load_model(model_path, max_masks=max_masks)
     dataloader = get_dataloader(demo_image_dir, max_masks=max_masks)
 
     all_metrics = []
@@ -155,6 +155,24 @@ def evaluate_model(version:str, demo_image_dir:str, sigmoid=False, max_masks=1):
         "learning_rate": model.learning_rate
     }
 
+class ModelStore:
+    _model:dict[int, CoronarySegmentationModel] = {}
+    @classmethod
+    def load_model(cls, name, path, mask_limit=1) -> CoronarySegmentationModel:
+        model = load_model(path, max_masks=mask_limit)
+        cls._model[name] = model
+        return model
+    @classmethod
+    def get_model(cls, name):
+        try:
+            model = cls._model[name]
+        except KeyError:
+            raise NameError(f"No model named: {name} loaded.")
+        return model
+    @classmethod
+    def list_model(cls):
+        return cls._model.keys()
+
 def predict(model_path, image_path, max_masks=1):
     model = load_model(model_path, max_masks=max_masks)
     image = imageLoader.load(image_path)
@@ -165,4 +183,12 @@ def predict(model_path, image_path, max_masks=1):
     pred = imageLoader.convert_to_pil(pred[0])
     return pred
 
+def test_image(model:CoronarySegmentationModel, image_path:str):
+    image = imageLoader.load(image_path)
+
+    with torch.no_grad():
+        image = image.unsqueeze(0)
+        pred = model(image)
+    pred = imageLoader.convert_to_pil(pred[0])
+    return pred
 

@@ -10,7 +10,7 @@ class AngiogramDataset(Dataset):
     def __init__(self, image_dir, max_masks=1, load_to_device=None):
         self.image_dir = os.path.join(image_dir , "images")
         self.mask_dir = os.path.join(image_dir , "masks")
-        self.image_paths = os.listdir(image_dir)
+        self.image_paths = os.listdir(self.image_dir)
 
         self.max_masks = max_masks
         self.tensor = transforms.ToTensor()
@@ -18,6 +18,8 @@ class AngiogramDataset(Dataset):
 
     def __len__(self):
         return len(self.image_paths)
+    def get_image_name(self, idx):
+        return self.image_paths[idx]
 
     def __getitem__(self, index):
         img = self.image_paths[index]
