@@ -156,14 +156,17 @@ def evaluate_model(model_path:str, demo_image_dir:str, sigmoid=False, max_masks=
     }
 
 class ModelStore:
-    _model:dict[int, CoronarySegmentationModel] = {}
+    _model:dict[Union[None, int], CoronarySegmentationModel] = {}
+    _default = None
     @classmethod
     def load_model(cls, name, path, mask_limit=1) -> CoronarySegmentationModel:
         model = load_model(path, max_masks=mask_limit)
         cls._model[name] = model
         return model
     @classmethod
-    def get_model(cls, name):
+    def get_model(cls, name=None):
+        if not name:
+            name = cls._default
         try:
             model = cls._model[name]
         except KeyError:
@@ -172,6 +175,9 @@ class ModelStore:
     @classmethod
     def list_model(cls):
         return cls._model.keys()
+    @classmethod
+    def set_default(cls, name):
+        cls._default = name
 
 def predict(model_path, image_path, max_masks=1):
     model = load_model(model_path, max_masks=max_masks)
