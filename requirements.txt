@@ -1,5 +1,6 @@
 streamlit
 pytorch-lightning<=2.4.0
 # lightning-utilities
-torch<=2.5.0 --index-url https://download.pytorch.org/whl/cpu
-torchvision<=0.20.0 --index-url https://download.pytorch.org/whl/cpu
+--index-url https://download.pytorch.org/whl/cpu
+torch<=2.5.0
+torchvision<=0.20.0
